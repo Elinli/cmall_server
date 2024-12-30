@@ -1,0 +1,81 @@
+
+打开面板
+psql -U postgres
+
+创建用户
+CREATE USER test WITH PASSWORD 'test';
+
+创建用户并赋予权限
+ALTER USER "z-blog" WITH login superuser createrole createdb replication bypassrls;
+
+单独赋予权限
+ALTER USER "z-blog" WITH superuser;
+
+删除权限
+nologin：无法登录
+nosuperuser：去除超级管理员权限
+nocreaterole：去除建立用户权限
+nocreatedb：去除创建数据库权限
+noreplication：去除检查角色是否为复制角色权限
+nobypassrls：去除绕过RLS权限（Row Level Secruity行级安全策略）
+
+ALTER USER testuser WITH nosuperuser;
+
+
+修改密码
+ALTER USER test WITH PASSWORD 'test';
+
+创建数据库
+CREATE DATABASE test;
+create database test owner testdb;
+
+赋予数据库权限
+GRANT ALL PRIVILEGES ON DATABASE testdb TO test;
+
+切换数据库或用户名
+\c[onnect] {[DBNAME|- USER|- HOST|- PORT|-] | conninfo}
+
+查看所有数据库
+\l
+
+切换数据库
+\c testdb
+
+切换用户
+\c - test
+
+查看用户
+\du
+
+查看指定用户
+\du postgres    
+
+更多信息
+\du+ 
+
+所有用户
+\duS
+
+pgcli连接
+pgcli -h localhost -p 5432 -U postgres chat
+
+创建数据库
+sqlx database create
+
+初始化数据库
+sqlx migrate add initial
+sqlx migrate run
+
+
+密码hash转换
+crate:argon2
+
+
+使用 OpenSSL 和 PEM 导入私钥创建 RSA 密钥对
+openssl genrsa -out private.pem 2048
+openssl rsa -in private.pem -outform PEM -pubout -out public.pem
+
+
+ed25519 密钥对
+openssl genpkey -algorithm ed25519 -out private.pem
+openssl pkey -in private.key -pubout -out public.pem
