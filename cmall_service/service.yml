@@ -1,0 +1,15 @@
+server:
+  host: 0.0.0.0
+  port: 5174
+  db_url: postgres://postgres:admin@localhost:5432/cmall
+  base_dir: /workspace/upload/cmall
+auth:
+  secret_key: |
+    -----BEGIN PRIVATE KEY-----
+    MC4CAQAwBQYDK2VwBCIEIL5SZxU9I6/4XHKTL0Ca52Ne/ExizHgTDb7RvRFm1B59
+    -----END PRIVATE KEY-----
+  public_key: |
+    -----BEGIN PUBLIC KEY-----
+    MCowBQYDK2VwAyEAf5IntKSshsichiG8VT0PCaCJwR85pl2RUfOdiW+hzH0=
+    -----END PUBLIC KEY-----
+  expires_in: 7
