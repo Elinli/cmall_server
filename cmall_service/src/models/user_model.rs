@@ -56,7 +56,7 @@ impl AppState {
     pub async fn verify_user(&self, input: &LoginUser) -> Result<Option<User>, UserError> {
         let user:Option<User> = sqlx::query_as(
             r#"
-            SELECT id, username, dept_id, email, create_time, update_time, status, avatar, roles, phone FROM users WHERE email = $1
+            SELECT id, username, dept_id, email, create_time, update_time, status, avatar, roles, phone,password_hash FROM users WHERE email = $1
         "#,
         )
         .bind(&input.email)
@@ -110,13 +110,15 @@ fn format_password(password: &str) -> Result<String, UserError> {
     Ok(password_hash)
 }
 
-pub fn verify_password(password: &str, hash: &str) -> Result<bool, UserError> {
+fn verify_password(password: &str, password_hash: &str) -> Result<bool, UserError> {
     let argon2 = Argon2::default();
-    let parsed_hash = PasswordHash::new(hash)?;
+    let password_hash = PasswordHash::new(password_hash)?;
 
+    // Verify password
     let is_valid = argon2
-        .verify_password(password.as_bytes(), &parsed_hash)
+        .verify_password(password.as_bytes(), &password_hash)
         .is_ok();
+
     Ok(is_valid)
 }
 // #[cfg(test)]
@@ -151,7 +153,7 @@ mod test_user {
     #[test]
     fn test_verify_password() {
         let r = verify_password("test123", "$argon2id$v=19$m=19456,t=2,p=1$eD8F04XyGZgsZKPuxfVPHA$mGlSbvR5I0QqFXAzg256iXmPBSgvjSrhOAyypRKqvqY");
-       assert_eq!(r.unwrap(), true);
+        assert_eq!(r.unwrap(), true);
     }
 
     #[tokio::test]

@@ -5,10 +5,11 @@ mod models;
 mod router;
 
 use anyhow::Context;
-use axum::{response::IntoResponse, routing::get, Router};
+use axum::{http::Method, response::IntoResponse, routing::get, Router};
 use core::fmt;
 use error::AppError;
 use sqlx::PgPool;
+use tower_http::cors::{self, Any, CorsLayer};
 // use sqlx_db_tester::TestPg;
 use std::{ops::Deref, sync::Arc};
 use tokio::fs;
@@ -74,17 +75,28 @@ impl fmt::Debug for AppStateInner {
 }
 
 pub fn setup_router(state: AppState) -> Result<Router, AppError> {
-    let user_router = setup_user_router();
+    let origins = ["http://localhost:5173".parse().unwrap()];
 
+    let cors = CorsLayer::new()
+        .allow_methods([
+            Method::GET,
+            Method::POST,
+            Method::PUT,
+            Method::DELETE,
+            Method::PATCH,
+        ])
+        .allow_origin(origins)
+        .allow_headers(Any);
+    let base_router = setup_base_router().layer(cors);
     let cmall_router = Router::new()
         .route("/", get(index_handler))
-        .nest("/user", user_router)
+        .nest("/api/v1", base_router)
         .with_state(state);
     Ok(cmall_router)
 }
 
 async fn index_handler() -> impl IntoResponse {
-    "Hello, World!"
+    "Weclome To Reny Cmall!"
 }
 
 #[cfg(feature = "test-util")]

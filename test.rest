@@ -1,1 +1,35 @@
-GET http://localhost:5174/user/1
+### signup user
+
+POST http://localhost:5174/signup
+Content-Type: application/json
+
+{
+    "email": "tcl@qq.com",
+    "dept_id": 1,
+    "roles": [1, 3],
+    "username": "Alice Shi",
+    "password": "123456",
+    "status": "active",
+    "phone": "139",
+    "created_time": "2023-01-01T00:00:00Z",
+    "updated_time": "2023-01-01T00:00:00Z",
+    "avatar": "default"
+}
+
+
+### signin user
+
+# @name signin
+POST http://localhost:5174/api/v1/signin
+Content-Type: application/json
+
+{
+    "email": "tcl@qq.com",
+    "password": "123456"
+}
+
+@token = {{ signin.response.body.token }}
+
+### get user
+
+GET http://localhost:5174/api/v1/user/1
