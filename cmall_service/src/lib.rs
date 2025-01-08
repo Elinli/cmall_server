@@ -3,18 +3,25 @@ mod error;
 mod handler;
 mod models;
 mod router;
+mod serde_error;
 
 use anyhow::Context;
-use axum::{http::Method, response::IntoResponse, routing::get, Router};
+use axum::{
+    http::Method,
+    middleware::from_fn_with_state,
+    response::IntoResponse,
+    routing::{get, post},
+    Router,
+};
 use core::fmt;
 use error::AppError;
 use sqlx::PgPool;
-use tower_http::cors::{self, Any, CorsLayer};
+use tower_http::cors::{Any, CorsLayer};
 // use sqlx_db_tester::TestPg;
 use std::{ops::Deref, sync::Arc};
 use tokio::fs;
 
-use cmall_core::{DecodingKeyPair, EncodingKeyPair};
+use cmall_core::{verify_token, DecodingKeyPair, EncodingKeyPair, TokenVerify, User};
 pub use config::*;
 pub use handler::*;
 pub use models::*;
@@ -87,12 +94,24 @@ pub fn setup_router(state: AppState) -> Result<Router, AppError> {
         ])
         .allow_origin(origins)
         .allow_headers(Any);
-    let base_router = setup_base_router().layer(cors);
+    let base_router = setup_base_router()
+        .layer(from_fn_with_state(state.clone(), verify_token::<AppState>))
+        .route("/signin", post(signin_handler))
+        .route("/signup", post(signup_handler))
+        .layer(cors);
     let cmall_router = Router::new()
         .route("/", get(index_handler))
         .nest("/api/v1", base_router)
         .with_state(state);
     Ok(cmall_router)
+}
+
+impl TokenVerify for AppState {
+    type Error = AppError;
+
+    fn verify(&self, token: &str) -> Result<User, Self::Error> {
+        Ok(self.public_key.verify(token)?)
+    }
 }
 
 async fn index_handler() -> impl IntoResponse {

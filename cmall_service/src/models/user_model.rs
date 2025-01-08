@@ -11,12 +11,24 @@ use tracing::info;
 use crate::{error::UserError, AppState};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateUser {
     pub dept_id: i64,
     pub username: String,
     pub email: String,
     pub phone: String,
     pub password: String,
+    pub status: UserStatus,
+    pub roles: Vec<i64>,
+    pub avatar: String,
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateUser {
+    pub dept_id: i64,
+    pub username: String,
+    pub email: String,
+    pub phone: String,
     pub status: UserStatus,
     pub roles: Vec<i64>,
     pub avatar: String,
@@ -96,6 +108,102 @@ impl AppState {
         ")
         .bind(id)
         .fetch_optional(&self.pool).await?;
+        Ok(user)
+    }
+    pub async fn find_users(&self) -> Result<Vec<User>, UserError> {
+        let users = sqlx::query_as("
+          SELECT id, username, dept_id, email, create_time, update_time, status, avatar, roles, phone FROM users
+        ")
+        .fetch_all(&self.pool).await?;
+        Ok(users)
+    }
+
+    // 根据传入的查询条件，一个对象，传递的值可能为空，并集查询user {username,email,roles}
+    pub async fn find_user_by_conditions(
+        &self,
+        username: Option<&str>,
+        email: Option<&str>,
+        phone: Option<&str>,
+        status: Option<UserStatus>,
+        page_num: i64,
+        page_size: i64,
+    ) -> Result<(Vec<User>, i64), UserError> {
+        // 需要根据分页信息查询
+        let offset = (page_num - 1) * page_size;
+
+        let users = sqlx::query_as(
+                r#"
+                SELECT id, username, dept_id, email, create_time, update_time, status, avatar, roles, phone FROM users
+                WHERE (username = $1 or $1 IS NULL)
+                AND (email = $2 OR $2 IS NULL)
+                AND (phone = $3 OR $3 IS NULL)
+                AND (status = $4 OR $4 IS NULL)
+                LIMIT $5 OFFSET $6 
+                "#,
+        ).bind(username)
+        .bind(email)
+        .bind(phone)
+        .bind(status.clone())
+        .bind(page_size)
+        .bind(offset)
+            .fetch_all(&self.pool)
+            .await.unwrap();
+
+        // 获取满足条件的总记录数
+        let total_count: i64 = sqlx::query_scalar(
+            r#"
+            SELECT COUNT(*) FROM users
+            WHERE (username = $1 OR $1 IS NULL)
+            AND (email = $2 OR $2 IS NULL)
+            AND (phone = $3 OR $3 IS NULL)
+            AND (status = $4 OR $4 IS NULL)
+            "#,
+        )
+        .bind(username)
+        .bind(email)
+        .bind(phone)
+        .bind(status)
+        .fetch_one(&self.pool)
+        .await?;
+        Ok((users, total_count))
+    }
+
+    pub async fn delete_user(&self, id: i64) -> Result<bool, UserError> {
+        let user = self.find_user_by_id(id).await?;
+        if user.is_none() {
+            return Err(UserError::NotFound(format!("user id {}", id)));
+        }
+        let result = sqlx::query(
+            r#"
+            DELETE FROM users WHERE id = $1
+        "#,
+        )
+        .bind(id)
+        .execute(&self.pool)
+        .await?;
+        if result.rows_affected() == 0 {
+            return Err(UserError::NotFound(format!("user id {}", id)));
+        }
+        Ok(true)
+    }
+
+    pub async fn update_user(&self, id: i64, input: &UpdateUser) -> Result<User, UserError> {
+        let user = self.find_user_by_id(id).await?;
+        if user.is_none() {
+            return Err(UserError::NotFound(format!("user id {}", id)));
+        }
+        let user: User= sqlx::query_as(r#"
+            UPDATE users SET username = $1, email = $2, phone = $3, status = $4, avatar = $5, roles = $6, update_time = $7 WHERE id = $8
+            RETURNING id, username, dept_id, email, create_time, update_time, status, avatar, roles, phone
+        "#).bind(&input.username)
+        .bind(&input.email)
+        .bind(&input.phone)
+        .bind(&input.status)
+        .bind(&input.avatar)
+        .bind(&input.roles)
+        .bind(chrono::Utc::now().naive_utc())
+        .bind(id)
+        .fetch_one(&self.pool).await?;
         Ok(user)
     }
 }

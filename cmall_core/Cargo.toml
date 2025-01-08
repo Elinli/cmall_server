@@ -9,7 +9,9 @@ axum = { workspace = true }
 axum-extra = { workspace = true }
 chrono = { workspace = true }
 jwt-simple = { workspace = true }
+rust_xlsxwriter = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
 sqlx = { workspace = true }
 tokio = { workspace = true }
 tower = { workspace = true }

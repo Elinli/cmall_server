@@ -1,2 +1,2 @@
 mod user_model;
-pub use user_model::{CreateUser, LoginUser};
+pub use user_model::{CreateUser, LoginUser, UpdateUser};

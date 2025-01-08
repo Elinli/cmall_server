@@ -5,6 +5,7 @@ use axum::{
 use thiserror::Error;
 
 use super::ErrorOutput;
+use rust_xlsxwriter::XlsxError;
 
 #[derive(Error, Debug)]
 pub enum UserError {
@@ -22,6 +23,13 @@ pub enum UserError {
 
     #[error("not found: {0}")]
     NotFound(String),
+
+
+    #[error("export error: {0}")]
+    ExportFileError(#[from] XlsxError),
+
+    #[error("io error: {0}")]
+    IoError(#[from] std::io::Error),
     // #[error("unauthorized")]
     // Unauthorized,
 
@@ -49,6 +57,8 @@ impl IntoResponse for UserError {
 
             Self::SqlxError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::AnyError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::ExportFileError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::IoError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };
         (status, Json(ErrorOutput::new(self.to_string()))).into_response()
     }

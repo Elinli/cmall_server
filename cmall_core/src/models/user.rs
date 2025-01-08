@@ -1,3 +1,5 @@
+use std::fmt;
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
@@ -10,6 +12,17 @@ pub enum UserStatus {
     Off,
     Offline,
     Online,
+}
+impl fmt::Display for UserStatus {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            UserStatus::Active => write!(f, "Active"),
+            UserStatus::Off => write!(f, "off"),
+            UserStatus::Offline => write!(f, "offline"),
+            UserStatus::Online => write!(f, "online"),
+            // 添加其他状态的匹配
+        }
+    }
 }
 
 #[derive(Debug, Clone, FromRow, Deserialize, Serialize, PartialEq)]
@@ -25,9 +38,9 @@ pub struct User {
     pub phone: String,
     pub avatar: String,
     pub status: UserStatus,
+    pub roles: Vec<i64>,
     pub create_time: DateTime<Utc>,
     pub update_time: DateTime<Utc>,
-    pub roles: Vec<i64>,
 }
 
 

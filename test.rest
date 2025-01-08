@@ -24,7 +24,7 @@ POST http://localhost:5174/api/v1/signin
 Content-Type: application/json
 
 {
-    "email": "tcl@qq.com",
+    "email": "elixy@qq.com",
     "password": "123456"
 }
 
@@ -33,3 +33,63 @@ Content-Type: application/json
 ### get user
 
 GET http://localhost:5174/api/v1/user/1
+Content-Type: application/json
+Authorization: Bearer {{ token }}
+
+
+### get users
+
+GET http://localhost:5174/api/v1/user
+Content-Type: application/json
+Authorization: Bearer {{ token }}
+
+{
+
+}
+
+
+### get users by condition
+
+GET http://localhost:5174/api/v1/user
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "username": "test"
+}
+
+
+POST http://localhost:5174/api/v1/user
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "deptId": 1,
+    "username": "Yao Y",
+    "password": "123456",
+    "email": "yaoy@gmail.com",
+    "phone": "123456789",
+    "status": "active",
+    "avatar": "default",
+    "roles": [
+        1, 2, 3
+    ]
+}
+
+### update user
+
+POST http://localhost:5174/api/v1/user/13
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "deptId": 1,
+    "username": "Yao Y",
+    "email": "elixy@qq.com",
+    "phone": "123456789",
+    "status": "active",
+    "avatar": "default",
+    "roles": [
+        1, 2, 3
+    ]
+}
