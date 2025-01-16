@@ -8,7 +8,7 @@ use cmall_core::{User, UserStatus};
 use serde::{Deserialize, Serialize};
 use tracing::info;
 
-use crate::{error::UserError, AppState};
+use crate::{error::AppError, AppState};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -41,10 +41,10 @@ pub struct LoginUser {
 }
 
 impl AppState {
-    pub async fn create_user(&self, input: &CreateUser) -> Result<User, UserError> {
+    pub async fn create_user(&self, input: &CreateUser) -> Result<User, AppError> {
         let user = self.find_user_by_email(&input.email).await?;
         if user.is_some() {
-            return Err(UserError::UserAlreadyExisted(input.email.clone()));
+            return Err(AppError::UserAlreadyExisted(input.email.clone()));
         };
         let password_hash = format_password(&input.password)?;
         let user: User = sqlx::query_as(
@@ -65,7 +65,7 @@ impl AppState {
         Ok(user)
     }
 
-    pub async fn verify_user(&self, input: &LoginUser) -> Result<Option<User>, UserError> {
+    pub async fn verify_user(&self, input: &LoginUser) -> Result<Option<User>, AppError> {
         let user:Option<User> = sqlx::query_as(
             r#"
             SELECT id, username, dept_id, email, create_time, update_time, status, avatar, roles, phone,password_hash FROM users WHERE email = $1
@@ -94,7 +94,7 @@ impl AppState {
         }
     }
 
-    pub async fn find_user_by_email(&self, email: &str) -> Result<Option<User>, UserError> {
+    pub async fn find_user_by_email(&self, email: &str) -> Result<Option<User>, AppError> {
         let user  = sqlx::query_as("
           SELECT id, username, dept_id, email, create_time, update_time, status, avatar, roles, phone FROM users WHERE email = $1
         ")
@@ -102,7 +102,7 @@ impl AppState {
         .fetch_optional(&self.pool).await?;
         Ok(user)
     }
-    pub async fn find_user_by_id(&self, id: i64) -> Result<Option<User>, UserError> {
+    pub async fn find_user_by_id(&self, id: i64) -> Result<Option<User>, AppError> {
         let user  = sqlx::query_as("
           SELECT id, username, dept_id, email, create_time, update_time, status, avatar, roles, phone FROM users WHERE id = $1
         ")
@@ -110,7 +110,7 @@ impl AppState {
         .fetch_optional(&self.pool).await?;
         Ok(user)
     }
-    pub async fn find_users(&self) -> Result<Vec<User>, UserError> {
+    pub async fn find_users(&self) -> Result<Vec<User>, AppError> {
         let users = sqlx::query_as("
           SELECT id, username, dept_id, email, create_time, update_time, status, avatar, roles, phone FROM users
         ")
@@ -127,7 +127,7 @@ impl AppState {
         status: Option<UserStatus>,
         page_num: i64,
         page_size: i64,
-    ) -> Result<(Vec<User>, i64), UserError> {
+    ) -> Result<(Vec<User>, i64), AppError> {
         // 需要根据分页信息查询
         let offset = (page_num - 1) * page_size;
 
@@ -168,10 +168,10 @@ impl AppState {
         Ok((users, total_count))
     }
 
-    pub async fn delete_user(&self, id: i64) -> Result<bool, UserError> {
+    pub async fn delete_user(&self, id: i64) -> Result<bool, AppError> {
         let user = self.find_user_by_id(id).await?;
         if user.is_none() {
-            return Err(UserError::NotFound(format!("user id {}", id)));
+            return Err(AppError::NotFound(format!("user id {}", id)));
         }
         let result = sqlx::query(
             r#"
@@ -182,15 +182,15 @@ impl AppState {
         .execute(&self.pool)
         .await?;
         if result.rows_affected() == 0 {
-            return Err(UserError::NotFound(format!("user id {}", id)));
+            return Err(AppError::NotFound(format!("user id {}", id)));
         }
         Ok(true)
     }
 
-    pub async fn update_user(&self, id: i64, input: &UpdateUser) -> Result<User, UserError> {
+    pub async fn update_user(&self, id: i64, input: &UpdateUser) -> Result<User, AppError> {
         let user = self.find_user_by_id(id).await?;
         if user.is_none() {
-            return Err(UserError::NotFound(format!("user id {}", id)));
+            return Err(AppError::NotFound(format!("user id {}", id)));
         }
         let user: User= sqlx::query_as(r#"
             UPDATE users SET username = $1, email = $2, phone = $3, status = $4, avatar = $5, roles = $6, update_time = $7 WHERE id = $8
@@ -208,7 +208,7 @@ impl AppState {
     }
 }
 
-fn format_password(password: &str) -> Result<String, UserError> {
+fn format_password(password: &str) -> Result<String, AppError> {
     let salt = SaltString::generate(&mut OsRng);
 
     let argon2 = Argon2::default();
@@ -218,7 +218,7 @@ fn format_password(password: &str) -> Result<String, UserError> {
     Ok(password_hash)
 }
 
-fn verify_password(password: &str, password_hash: &str) -> Result<bool, UserError> {
+fn verify_password(password: &str, password_hash: &str) -> Result<bool, AppError> {
     let argon2 = Argon2::default();
     let password_hash = PasswordHash::new(password_hash)?;
 

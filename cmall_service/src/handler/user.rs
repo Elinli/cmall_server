@@ -11,7 +11,7 @@ use rust_xlsxwriter::{Format, Workbook};
 use serde::{Deserialize, Serialize};
 use tracing::info;
 
-use crate::{error::UserError, CreateUser, UpdateUser};
+use crate::{error::AppError, CreateUser, UpdateUser};
 use crate::{AppState, RecordOutput};
 
 // #[serde(deny_unknown_fields)]
@@ -29,10 +29,10 @@ pub struct SearchUser {
     pub page_size: i64,
 }
 
-pub async fn list_search_user_handler(
+pub async fn list_user_handler(
     State(state): State<AppState>,
     Query(input): Query<SearchUser>,
-) -> Result<impl IntoResponse, UserError> {
+) -> Result<impl IntoResponse, AppError> {
     info!("search user: {:?}", input);
     // let user = state.
     let (users, total_count) = state
@@ -51,11 +51,11 @@ pub async fn list_search_user_handler(
 pub async fn get_user_handler(
     State(state): State<AppState>,
     Path(id): Path<i64>,
-) -> Result<impl IntoResponse, UserError> {
+) -> Result<impl IntoResponse, AppError> {
     let user = state.find_user_by_id(id).await?;
     match user {
         Some(user) => Ok(Json(user)),
-        None => Err(UserError::NotFound(id.to_string())),
+        None => Err(AppError::NotFound(id.to_string())),
     }
 }
 
@@ -64,7 +64,7 @@ pub async fn update_user_handler(
     State(state): State<AppState>,
     Path(id): Path<i64>,
     Json(input): Json<UpdateUser>,
-) -> Result<impl IntoResponse, UserError> {
+) -> Result<impl IntoResponse, AppError> {
     let user = state.update_user(id, &input).await?;
     Ok((StatusCode::OK, Json(user)))
 }
@@ -74,7 +74,7 @@ pub async fn create_user_handler(
     Extension(user): Extension<User>,
     State(state): State<AppState>,
     Json(input): Json<CreateUser>,
-) -> Result<impl IntoResponse, UserError> {
+) -> Result<impl IntoResponse, AppError> {
     info!("create_user_handler {:?}", input);
     let user = state.create_user(&input).await?;
     Ok((StatusCode::CREATED, Json(user)))
@@ -83,7 +83,7 @@ pub async fn create_user_handler(
 pub async fn delete_user_handler(
     State(state): State<AppState>,
     Path(id): Path<i64>,
-) -> Result<impl IntoResponse, UserError> {
+) -> Result<impl IntoResponse, AppError> {
     info!("delete_user_handler {:?}", id);
     let result = state.delete_user(id).await?;
     let success = Json(result);
@@ -93,7 +93,7 @@ pub async fn delete_user_handler(
 
 pub async fn export_users_handler(
     State(state): State<AppState>,
-) -> Result<impl IntoResponse, UserError> {
+) -> Result<impl IntoResponse, AppError> {
     info!("export_file_handler");
     let users = state.find_users().await?;
 

@@ -1,9 +1,13 @@
-mod user;
 use serde::{Deserialize, Serialize};
+
+mod user;
 pub use user::*;
 
 mod auth;
 pub use auth::*;
+
+mod role;
+pub use role::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RecordOutput<T> {

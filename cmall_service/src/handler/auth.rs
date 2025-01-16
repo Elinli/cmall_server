@@ -3,7 +3,7 @@ use cmall_core::User;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    error::{ErrorOutput, UserError},
+    error::{ErrorOutput, AppError},
     AppState, CreateUser, LoginUser,
 };
 
@@ -16,7 +16,7 @@ pub struct AuthOutput {
 pub async fn signup_handler(
     State(state): State<AppState>,
     Json(input): Json<CreateUser>,
-) -> Result<impl IntoResponse, UserError> {
+) -> Result<impl IntoResponse, AppError> {
     let user = state.create_user(&input).await?;
     let token = state.secret_key.sign(user.clone())?;
     let body = Json(AuthOutput { token, user });
@@ -26,7 +26,7 @@ pub async fn signup_handler(
 pub async fn signin_handler(
     State(state): State<AppState>,
     Json(input): Json<LoginUser>,
-) -> Result<impl IntoResponse, UserError> {
+) -> Result<impl IntoResponse, AppError> {
     let user = state.verify_user(&input).await?;
 
     match user {

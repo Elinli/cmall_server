@@ -1,0 +1,70 @@
+创建容器
+docker container run <image name> 
+-> 简化 
+docker run <image name>
+
+列出容器
+docker container ls
+docker ps
+
+列出所有容器
+docker container ls -a
+
+删除容器
+docker container rm <container id>
+
+删除多个容器
+docker container rm <container id> <container id>
+
+批量删除/停止
+获取id
+docker container ps -aq 
+
+docker container rm/stop $(docker container ps -aq)
+
+删除启动中的容器
+docker container rm id -f 
+
+停止容器
+docker container stop <container id>
+
+后台启用镜像 --detach
+docker container run -d <image name>
+
+与后台的镜像关联
+docker container attach <container id>
+
+端口转发
+docker container run -d -p 80:80 <image name>
+
+打印镜像的log
+docker container logs <container id>
+
+动态log
+docker container logs -f <container id>
+
+镜像交互-进入容器的shell
+docker container run -it ubuntu sh
+
+*后台运行的镜像交互
+docker exec -it <container id> sh
+
+与已经运行的镜像交互
+docker container exec -it <container id> sh
+
+拉取镜像
+docker image pull <image name>
+
+docker image ls 
+
+指定版本号
+docker image pull <image name>:<version>
+
+拉取非官方镜像 quay.io 镜像网站
+docker image pull quay.io/userid/<image name>:<version>
+
+
+
+
+
+

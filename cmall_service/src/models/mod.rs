@@ -1,2 +1,5 @@
-mod user_model;
-pub use user_model::{CreateUser, LoginUser, UpdateUser};
+mod user;
+pub use user::{CreateUser, LoginUser, UpdateUser};
+
+mod role;
+pub use role::OperateRole;

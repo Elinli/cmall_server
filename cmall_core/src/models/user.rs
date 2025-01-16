@@ -43,21 +43,6 @@ pub struct User {
     pub update_time: DateTime<Utc>,
 }
 
-
-#[derive(Debug, Clone, FromRow, Serialize, Deserialize, PartialEq)]
-pub struct SignUser {
-    pub id: i64,
-    pub username: String,
-    pub email: String,
-    pub phone: String,
-    pub avatar: String,
-    pub status: UserStatus,
-    pub dept_id: i64,
-    pub roles: Vec<i64>,
-    pub create_time: DateTime<Utc>,
-    pub update_time: DateTime<Utc>,
-}
-
 impl User {
     pub fn new(id: i64, username: &str, email: &str, phone: &str) -> Self {
         Self {
